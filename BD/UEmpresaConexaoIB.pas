@@ -17,7 +17,7 @@ type
          constructor create(fEmpresa: Integer);
          procedure CarregaConfig;
          procedure CarregaConfigPadrao;
-         procedure Commita;
+   ta      procedure Commita;
          procedure desconecta;
          function EstadoBanco: Boolean;
          procedure SetConexao(const Value: TIBDatabase);

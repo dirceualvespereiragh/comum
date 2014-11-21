@@ -69,8 +69,8 @@ procedure TBaseContabilIB.CarregaConfig;
 begin
    inherited;
    if (Caminho <> '') then begin
-   quero tirar este codio abaixo para passar paRA O ANCESTRAL
-   MAS APARECE ERRO NA SEGUNDA CHAMADA
+//   quero tirar este codio abaixo para passar paRA O ANCESTRAL
+//   MAS APARECE ERRO NA SEGUNDA CHAMADA
    //   FConexao.DatabaseName := Caminho;
    //   FConexao.Params.Add('user_name='+ Usuario);
    //   FConexao.Params.Add(Senha);
