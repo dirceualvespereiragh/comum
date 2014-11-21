@@ -1,0 +1,171 @@
+unit UEmpresaConexaoIB;
+
+interface
+
+uses
+strUtils, typinfo,variants,  Provider,IBDatabase ,dbclient,dblocal,
+IBStoredProc,IBQuery, SysUtils,Classes,DB,INIFiles,
+
+UContabil ;
+
+type
+   TConGeralExcecao = class(Exception);//Execeção  Genérica
+
+   TEmpresaContabilIB = class(TContabil)
+      private
+         fCodigoEmpresa : integer;
+         constructor create(fEmpresa: Integer);
+         procedure CarregaConfig;
+         procedure CarregaConfigPadrao;
+         procedure Commita;
+         procedure desconecta;
+         function EstadoBanco: Boolean;
+         procedure SetConexao(const Value: TIBDatabase);
+      public
+
+         class function GetObjetoConexao(fEmpresa: Integer): TContabil;
+         procedure Abretransacao;
+         procedure CancelaTransacao;
+         //function FoiCriado(): Boolean;   override;
+         procedure CompletaCaminho(var fCaminho:String);  override;
+         destructor destroy();
+      end;
+
+implementation
+
+var FInstancia:TContabil = nil;
+
+
+
+constructor TEmpresaContabilIB.create(fEmpresa: Integer);
+begin
+   try
+      // criar nossa conexao que será fornecida para todos o objetos DAOs
+      fCodigoEmpresa    := fEmpresa  ;  // Foi necessário passar por parâmetro pois o objeto nao estava criado
+      FConexao          := TIBDatabase.create(nil);
+      FConexao.DatabaseName := ''  ;
+      CarregaConfigPadrao;
+      CarregaConfig();
+   except
+      on TConGeralExcecao do begin
+            FConexao.Free;
+            FConexao := nil;
+            FMensagemErro := 'Erro nos parametros para abrir o Banco de Dados.';
+            Raise
+               TConGeralExcecao.Create('('+ FMensagemErro);
+      end;
+   end;
+end;
+
+
+
+
+procedure TEmpresaContabilIB.desconecta;
+begin
+ FConexao.DefaultTransaction.Commit;
+ inherited;
+end;
+
+
+destructor TEmpresaContabilIB.Destroy;
+begin
+  inherited;
+  try
+     FTransacao.Free;
+     FTransacao := nil;
+     inherited;
+  except
+     on TConGeralExcecao do begin
+        FConexao := nil;
+        FMensagemErro := 'Erro ao Finalizar o Serviço e Banco de Dados';
+        Raise TConGeralExcecao.Create(FMensagemErro);
+     end;
+  end;
+end;
+
+function TEmpresaContabilIB.EstadoBanco: Boolean;
+begin
+
+end;
+
+procedure TEmpresaContabilIB.SetConexao(const Value: TIBDatabase);
+begin
+   FConexao := Value;
+end;
+
+
+procedure TEmpresaContabilIB.Commita;
+begin
+   inherited;
+   FTransacao.Commit;
+end;
+
+class function TEmpresaContabilIB.GetObjetoConexao(fEmpresa: Integer): TContabil;
+begin
+   if (not Assigned(FInstancia)) then begin
+      FInstancia     := create(fEmpresa);
+   end;
+   result := TContabil(FInstancia);
+end;
+
+
+procedure TEmpresaContabilIB.CarregaConfig;
+var
+   Arquivo      : TINIFile;
+   pQualCaminho : String;
+begin
+   inherited;
+   if (Caminho <> '') then begin
+      FConexao.DatabaseName := Caminho;
+      FConexao.Params.Add('user_name='+ Usuario);
+      FConexao.Params.Add(Senha);
+      FConexao.Params.Add('lc_ctype=ISO8859_1');
+   end;
+end;
+
+
+procedure TEmpresaContabilIB.CarregaConfigPadrao;
+begin
+   // Verificamos se FConexao está criado para evitar um AccessViolation
+   if (Assigned(Conexao)) then begin
+      FTransacao := TIBTransaction.Create(nil);
+      FTransacao.DefaultAction := TACommit;
+      FTransacao.Params.Add('read_committed');
+      FTransacao.Params.Add('rec_version');
+      FTransacao.Params.Add('nowait');
+      FTransacao.DefaultDatabase   := FConexao;
+      FConexao.LoginPrompt         := False;
+      FConexao.DefaultTransaction  := FTransacao;
+      FConexao.SQLDialect          := 3;
+      FConexao.Params.Clear;
+      FResponseCode :=  0;
+      FNomeBanco := FConexao.DatabaseName;
+   end;
+end;
+
+//function TEmpresaContabilIB.FoiCriado: Boolean;
+//begin
+// if (Assigned(Conexao)) then begin
+//    result := True;
+// end else begin
+//    result := False;
+// end;
+//end;
+
+procedure TEmpresaContabilIB.Abretransacao;
+begin
+
+end;
+
+procedure TEmpresaContabilIB.CancelaTransacao;
+begin
+
+end;
+
+procedure TEmpresaContabilIB.CompletaCaminho(var fCaminho: String);
+begin
+   fCaminho := fCaminho + 'E000' +  inttostr(fCodigoEmpresa)  +'.FDB';
+end;
+
+end.
+

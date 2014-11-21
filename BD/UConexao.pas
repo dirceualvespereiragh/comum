@@ -1,0 +1,151 @@
+unit UConexao;
+
+interface
+
+uses
+strUtils, typinfo,variants,  SysUtils,Classes,DB ,
+
+uExcecao;
+
+type
+
+   TConexaoBD = class
+      private
+         procedure SetStringDeConexao(const Value: String);
+      protected   // troquei de private para  protected para a classe filha UConexaoFB poder ver as variáveis
+         fUsuario             : String;
+         fSenha               : String;
+         fNomeBanco           : String;
+         fCaminho             : String;
+         fStringDeConexao     : String;
+         fConectado           : Boolean;
+         FResponseCode        : Integer;
+         FMensagemErro        : String;
+         FConexao             : TCustomConnection;
+         procedure SetCaminho(const Value:String);
+         procedure SetUsuario(const Value:String);
+         procedure SetSenha  (const Value:String);
+         procedure CarregaConfigPadrao();  virtual; abstract;
+         procedure Commita;    virtual;   abstract;
+
+         procedure SetConexao(const Value: TCustomConnection);   virtual; abstract;
+         procedure CarregaConfig;   virtual; abstract;
+      published
+         property Caminho : String read FCaminho write SetCaminho;
+         property Usuario : String read FUsuario write SetUsuario;
+         property Senha   : String read FSenha   write SetSenha;
+         property StringDeConexao : String read fStringDeConexao write SetStringDeConexao;
+      public
+         class function GetObjetoConexao() : TConexaoBD;
+         procedure conecta;
+         procedure desconecta;
+         procedure Abretransacao;   virtual; abstract;
+         procedure CancelaTransacao; virtual; abstract;
+         function EstadoBanco: Boolean;  virtual; abstract;
+         class procedure Grava;
+         destructor destroy();
+         procedure freeinstance; override;
+       end;
+
+implementation
+
+var FInstancia:TConexaoBD = nil;
+
+{ TConexaoBD }
+
+procedure TConexaoBD.conecta;
+begin
+   try
+      FConexao.Connected  := True;
+   except
+      on TConGeralExcecao do begin
+         FConexao.Free;
+         FConexao := nil;
+         FMensagemErro := 'Erro ao abrir Banco.';
+         Raise  TConGeralExcecao.Create('('+ FMensagemErro);
+      end;
+   end;
+end;
+
+
+procedure TConexaoBD.desconecta;
+begin
+ try
+    FConexao.Connected  := False;
+    FConectado          := False;
+ except
+    on TConGeralExcecao do begin
+       FConexao := nil;
+       FMensagemErro := 'Erro ao desconectar o Banco de Dados.';
+       Raise
+          TConGeralExcecao.Create('('+ FMensagemErro);
+    end;
+ end;
+end;
+
+destructor TConexaoBD.Destroy;
+begin
+  try
+     FConexao.Free;
+     FConexao      := nil;
+     FResponseCode := 0;
+     FMensagemErro := EmptyStr;
+  except
+     on TConGeralExcecao do begin
+        FConexao := nil;
+        FMensagemErro := 'Erro ao Finalizar o Serviço e Banco de Dados';
+        Raise TConGeralExcecao.Create(FMensagemErro);
+     end;
+  end;
+  inherited Destroy;
+
+end;
+
+
+class function TConexaoBD.GetObjetoConexao(): TConexaoBD;
+begin
+   if (not Assigned(FInstancia)) then begin
+      FInstancia := create();
+   end;
+   result := FInstancia;
+end;
+
+
+
+procedure TConexaoBD.SetCaminho(const Value: String);
+begin
+   FCaminho := Value;
+end;
+
+
+procedure TConexaoBD.SetSenha(const Value: String);
+begin
+   FSenha := Value;
+end;
+
+procedure TConexaoBD.SetUsuario(const Value: String);
+begin
+   FUsuario := Value;
+end;
+
+class procedure TConexaoBD.Grava;
+begin
+   FInstancia.Commita;
+end;
+
+
+procedure TConexaoBD.freeinstance;
+begin
+   FInstancia := nil;
+   inherited FreeInstance;
+end;
+
+
+procedure TConexaoBD.SetStringDeConexao(const Value: String);
+begin
+  fStringDeConexao := Value;
+end;
+
+
+end.
+

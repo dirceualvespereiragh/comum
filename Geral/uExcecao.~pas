@@ -1,0 +1,12 @@
+unit uExcecao;
+
+interface
+
+type
+
+   TConGeralExcecao = class(Exception);//Execeção  Genérica
+
+implementation
+
+end.
+ 

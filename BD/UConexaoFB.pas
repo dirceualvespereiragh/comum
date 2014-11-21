@@ -1,0 +1,89 @@
+unit UConexaoFB;
+
+interface
+
+uses
+typinfo,variants,  IBDatabase , IBStoredProc,IBQuery, SysUtils,Classes,INIFiles,
+
+UConexao ;
+
+type
+
+   TConexaoFB = class(TConexaoBD)
+  private
+    procedure SetConexao(const Value: TIBDatabase);
+      protected
+         // Variavel estática para armazenar a unica instancia
+         FConexao             : TIBDatabase;
+         FTransacao           : TIBTransaction;
+         procedure CarregaConfig;   virtual; abstract;
+         procedure CarregaConfigPadrao;
+         procedure Commita;
+         procedure desconecta;
+         function EstadoBanco: Boolean;
+      published
+         property Conexao :  TIBDatabase read FConexao write SetConexao;
+
+      public
+         procedure Abretransacao;
+         procedure CancelaTransacao;
+      end;
+
+implementation
+
+
+{ TConexaoFB }
+
+procedure TConexaoFB.Abretransacao;
+begin
+
+end;
+
+procedure TConexaoFB.CancelaTransacao;
+begin
+
+end;
+
+
+function TConexaoFB.EstadoBanco: Boolean;
+begin
+
+end;
+
+
+procedure TConexaoFB.CarregaConfigPadrao;
+begin
+   // Verificamos se FConexao está criado para evitar um AccessViolation
+   if (Assigned(fConexao)) then begin
+      FTransacao := TIBTransaction.Create(nil);
+      FTransacao.DefaultAction := TACommit;
+      FTransacao.Params.Add('read_committed');
+      FTransacao.Params.Add('rec_version');
+      FTransacao.Params.Add('nowait');
+      FTransacao.DefaultDatabase := FConexao;
+      FConexao.LoginPrompt := False;
+      FConexao.DefaultTransaction := FTransacao;
+      FConexao.SQLDialect := 3;
+      FConexao.Params.Clear;
+      FResponseCode :=  0;
+      FNomeBanco := FConexao.DatabaseName;
+   end;
+end;
+
+procedure TConexaoFB.Commita;
+begin
+   FTransacao.Commit;
+end;
+
+procedure TConexaoFB.desconecta;
+begin
+   FConexao.DefaultTransaction.Commit;
+end;
+
+procedure TConexaoFB.SetConexao(const Value: TIBDatabase);
+begin
+  FConexao := Value;
+end;
+
+end.
+
