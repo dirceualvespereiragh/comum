@@ -6,10 +6,9 @@ uses
 strUtils, typinfo,variants,  Provider,IBDatabase ,dbclient,dblocal,
 IBStoredProc,IBQuery, SysUtils,Classes,DB,INIFiles,
 
-UContabil ;
+UContabil , uExcecao;
 
 type
-   TConGeralExcecao = class(Exception);//Execeção  Genérica
 
    TEmpresaContabilIB = class(TContabil)
       private
@@ -20,13 +19,12 @@ type
          procedure Commita;
          procedure desconecta;
          function EstadoBanco: Boolean;
-         procedure SetConexao(const Value: TIBDatabase);
+//         procedure SetConexao(const Value: TIBDatabase);
       public
 
          class function GetObjetoConexao(fEmpresa: Integer): TContabil;
          procedure Abretransacao;
          procedure CancelaTransacao;
-         function FoiCriado(): Boolean;   override;
          procedure CompletaCaminho(var fCaminho:String);  override;
          destructor destroy();
       end;
@@ -88,10 +86,10 @@ begin
 
 end;
 
-procedure TEmpresaContabilIB.SetConexao(const Value: TIBDatabase);
-begin
-   FConexao := Value;
-end;
+//procedure TEmpresaContabilIB.SetConexao(const Value: TIBDatabase);
+//begin
+//   FConexao := Value;
+//end;
 
 
 procedure TEmpresaContabilIB.Commita;
@@ -127,7 +125,7 @@ end;
 procedure TEmpresaContabilIB.CarregaConfigPadrao;
 begin
    // Verificamos se FConexao está criado para evitar um AccessViolation
-   if (Assigned(Conexao)) then begin
+   if (Assigned(fConexao)) then begin
       FTransacao := TIBTransaction.Create(nil);
       FTransacao.DefaultAction := TACommit;
       FTransacao.Params.Add('read_committed');
@@ -141,15 +139,6 @@ begin
       FResponseCode :=  0;
       FNomeBanco := FConexao.DatabaseName;
    end;
-end;
-
-function TEmpresaContabilIB.FoiCriado: Boolean;
-begin
- if (Assigned(Conexao)) then begin
-    result := True;
- end else begin
-    result := False;
- end;
 end;
 
 procedure TEmpresaContabilIB.Abretransacao;

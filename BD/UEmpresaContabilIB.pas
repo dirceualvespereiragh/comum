@@ -108,17 +108,17 @@ end;
 
 
 procedure TEmpresaContabilIB.CarregaConfig;
-var
-   Arquivo      : TINIFile;
-   pQualCaminho : String;
+//var
+//   Arquivo      : TINIFile;
+//   pQualCaminho : String;
 begin
    inherited;
-   if (Caminho <> '') then begin
-      FConexao.DatabaseName := Caminho;
-      FConexao.Params.Add('user_name='+ Usuario);
-      FConexao.Params.Add(Senha);
-      FConexao.Params.Add('lc_ctype=ISO8859_1');
-   end;
+//   if (Caminho <> '') then begin
+//      FConexao.DatabaseName := Caminho;
+//      FConexao.Params.Add('user_name='+ Usuario);
+//      FConexao.Params.Add(Senha);
+//      FConexao.Params.Add('lc_ctype=ISO8859_1');
+//   end;
 end;
 
 
